@@ -9,9 +9,9 @@ import java.util.TimeZone;
 
 /**
  * Class to calculate the sun rise and sun set at any location on the Earth.
- * 
+ *
  * Based on algorithm at http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
- * 
+ *
  * @see http://www.codeagnostic.com/featured/calculate-sunrisesunset-java/
  * @author dspiess
  *
@@ -22,14 +22,14 @@ public class SunriseSunset {
     static final public double CIVIL_ZENITH = 96;
     static final public double NAUTICAL_ZENITH = 102;
     static final public double ASTRONOMICAL_ZENITH = 108;
-    
+
     private List<Double> southernSunlightForYear = null;
     private List<Double> northernSunlightForYear = null;
-    
+
     /**
-     * Gets the year of sunlight for Ballast Key, FL.  This is the southern-most point in the 
+     * Gets the year of sunlight for Ballast Key, FL.  This is the southern-most point in the
      * 48 contiguous states.  The sunlight is represented as a double.
-     * 
+     *
      * @param year
      * @return Either 365 or 366 days of sunlight (depends on leap year)
      */
@@ -39,12 +39,12 @@ public class SunriseSunset {
         }
         return southernSunlightForYear;
     }
-    
+
     /**
-     * Gets the year of sunlight for Northwest Angle/Angle Township in Lake of the Woods, Minnesota.  
-     * This is the northern-most point in the 48 contiguous states.  The sunlight is represented 
+     * Gets the year of sunlight for Northwest Angle/Angle Township in Lake of the Woods, Minnesota.
+     * This is the northern-most point in the 48 contiguous states.  The sunlight is represented
      * as a double.
-     * 
+     *
      * @param year
      * @return Either 365 or 366 days of sunlight (depends on leap year)
      */
@@ -58,7 +58,7 @@ public class SunriseSunset {
     /**
      * Gets the year of sunlight for an arbitrary point on the Earth.  The sunlight is represented
      * as a double.
-     * 
+     *
      * @param year
      * @param latitude
      * @param longitude
@@ -66,11 +66,11 @@ public class SunriseSunset {
      */
     public List<Double> getYearOfSunlightForPoint(int year, double latitude, double longitude, TimeZone tz) {
         ArrayList<Double> returnList = new ArrayList<Double>();
-        
+
         Calendar calendar = Calendar.getInstance();
         calendar.set(year, 11, 31);  // month is 0 based
         int daysInYear = calendar.get(Calendar.DAY_OF_YEAR);
-        
+
         calendar.set(year, 0, 1);
         for (int i=0; i<daysInYear; i++) {
             returnList.add(new Double(getSunlightHours(latitude, longitude, calendar.getTime(), tz)));
@@ -78,10 +78,10 @@ public class SunriseSunset {
         }
         return returnList;
     }
-    
+
     /**
      * Returns the amount of sunlight in ms for a particular day at a particular location
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param date
@@ -90,10 +90,10 @@ public class SunriseSunset {
     public long getSunlight(double latitude, double longitude, Date date) {
         return this.getSunlight(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
     }
-    
+
     /**
      * Returns the amount of sunlight in ms for a particular day at a particular location
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param date
@@ -102,10 +102,10 @@ public class SunriseSunset {
     public long getSunlight(double latitude, double longitude, Date date, TimeZone tz) {
         return this.getSunlight(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, tz);
     }
-    
+
     /**
      * Returns the amount of sunlight in ms for a particular day at a particular location
-     * 
+     *
      * @param latitude location of sun calculation
      * @param longitude location of sun calculation
      * @param date date of sun calculation
@@ -115,7 +115,7 @@ public class SunriseSunset {
     public long getSunlight(double latitude, double longitude, Date date, double zenith, TimeZone tz) {
         Date sunrise = this.getSunrise(latitude, longitude, date, tz);
         Date sunset = this.getSunset(latitude, longitude, date, tz);
-        
+
         long sunlight = 0;
         if (sunrise == null) {
             // return 0
@@ -125,22 +125,22 @@ public class SunriseSunset {
             Calendar sunLightCal = Calendar.getInstance(tz);
             sunLightCal.setTime(sunrise);
             Calendar sunsetCal = Calendar.getInstance(tz);
-            sunsetCal.setTime(sunset); 
-            
-            
+            sunsetCal.setTime(sunset);
+
+
             long diff = sunsetCal.getTimeInMillis() - sunLightCal.getTimeInMillis();
             //long diffHours = diff / (60 * 60 * 1000);
             //long diffMinutes = diff / (60 * 1000);
             sunlight = diff;
         }
-        
+
         return sunlight;
     }
-    
+
     /**
-     * Returns the amount of hours of sunlight for a particular location as a double value.  The whole number 
+     * Returns the amount of hours of sunlight for a particular location as a double value.  The whole number
      * is the number of hours, and the fraction is the minutes.
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param date
@@ -149,11 +149,11 @@ public class SunriseSunset {
     public double getSunlightHours(double latitude, double longitude, Date date) {
         return this.getSunlightHours(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
     }
-    
+
     /**
-     * Returns the amount of hours of sunlight for a particular location as a double value.  The whole number 
+     * Returns the amount of hours of sunlight for a particular location as a double value.  The whole number
      * is the number of hours, and the fraction is the minutes.
-     * 
+     *
      * @param latitude location of sun calculation
      * @param longitude location of sun calculation
      * @param date date of sun calculation
@@ -165,14 +165,14 @@ public class SunriseSunset {
         long minutes = Math.round(sunlight / (1000 * 60));
         return (minutes / 60.0);
     }
-    
+
     private double getSunlightHours(double latitude, double longitude, Date date, TimeZone tz) {
         return this.getSunlightHours(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, tz);
     }
-    
+
     /**
      * Gets the sunset for today at a particular location
-     * 
+     *
      * @param latitude
      * @param longitude
      * @return
@@ -180,10 +180,10 @@ public class SunriseSunset {
     public Date getSunset(double latitude, double longitude) {
         return this.getSunset(latitude, longitude, new Date(), SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
     }
-    
+
     /**
      * Gets the sunset for today at a particular location with a particular zenith
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param zenith
@@ -192,10 +192,10 @@ public class SunriseSunset {
     public Date getSunset(double latitude, double longitude, Date date) {
         return this.getSunset(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
     }
-    
+
     /**
      * Gets the sunset for today at a particular location with a particular zenith
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param zenith
@@ -204,10 +204,10 @@ public class SunriseSunset {
     public Date getSunset(double latitude, double longitude, Date date, TimeZone tz) {
         return this.getSunset(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, tz);
     }
-    
+
     /**
      * Gets the time of a sunset for a particular location
-     * 
+     *
      * @param latitude location of sunset
      * @param longitude location of sunset
      * @param date date of sunset
@@ -224,7 +224,7 @@ public class SunriseSunset {
         int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
         int year = calendar.get(Calendar.YEAR);
 
-        // convert the longitude to hour value 
+        // convert the longitude to hour value
         double longitudeHour = longitude / 15;
         double settingTime = dayOfYear + ((18 - longitudeHour) / 24);
 
@@ -232,7 +232,7 @@ public class SunriseSunset {
         double sunMeanAnomaly = (0.9856 * settingTime) - 3.289;
 
         // calculate the sun's true longitude
-        double sunTrueLongitude = (sunMeanAnomaly 
+        double sunTrueLongitude = (sunMeanAnomaly
                 + (1.916 * Math.sin(sunMeanAnomaly * PiOver180))
                 + (0.020 * Math.sin(sunMeanAnomaly * 2 * PiOver180))
                 + 282.634);
@@ -275,10 +275,10 @@ public class SunriseSunset {
         double utcTime = localMeanTime - longitudeHour;
         utcTime = (utcTime < 0) ? utcTime + 24 : utcTime;
         //utcTime = (utcTime > 24) ? utcTime - 24 : utcTime;
-        
+
         // Get the GMT time
         int returnTime = (int) Math.floor(utcTime * 60 * 60 * 1000);
-        
+
         calendar.clear();
         calendar.setTimeZone(tz);
         calendar.add(Calendar.MILLISECOND, returnTime);
@@ -288,10 +288,10 @@ public class SunriseSunset {
 
         return calendar.getTime();
     }
-    
+
     /**
      * Gets the sunrise for today at a particular location
-     * 
+     *
      * @param latitude
      * @param longitude
      * @return
@@ -299,10 +299,10 @@ public class SunriseSunset {
     public Date getSunrise(double latitude, double longitude) {
         return this.getSunrise(latitude, longitude, new Date(), SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
     }
-    
+
     /**
      * Gets the sunrise for today at a particular location with a particular zenith
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param zenith
@@ -311,16 +311,16 @@ public class SunriseSunset {
     public Date getSunrise(double latitude, double longitude, Date date) {
         return this.getSunrise(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, TimeZone.getDefault());
     }
-    
-    
+
+
     public Date getSunrise(double latitude, double longitude, Date date, TimeZone tz) {
         Date gmtDate =  this.getSunrise(latitude, longitude, date, SunriseSunset.OFFICIAL_ZENITH, tz);
         return new Date(gmtDate.getTime());
     }
-    
+
     /**
      * Gets the sunrise for a particular date at a particular location
-     * 
+     *
      * @param latitude
      * @param longitude
      * @param date
@@ -335,11 +335,11 @@ public class SunriseSunset {
         calendar.clear();
         calendar.setTime(date);
         calendar.setTimeZone(tz);
-        
+
         int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
         int year = calendar.get(Calendar.YEAR);
 
-        // convert the longitude to hour value 
+        // convert the longitude to hour value
         double longitudeHour = longitude / 15;
         double risingTime = dayOfYear + ((6 - longitudeHour) / 24);
 
@@ -347,8 +347,8 @@ public class SunriseSunset {
         double sunMeanAnomaly = (0.9856 * risingTime) - 3.289;
 
         // calculate the sun's true longitude
-        
-        double sunTrueLongitude = (sunMeanAnomaly 
+
+        double sunTrueLongitude = (sunMeanAnomaly
                 + (1.916 * Math.sin(sunMeanAnomaly * PiOver180))
                 + (0.020 * Math.sin(sunMeanAnomaly * 2 * PiOver180))
                 + 282.634);
@@ -393,10 +393,10 @@ public class SunriseSunset {
         double utcTime = localMeanTime - longitudeHour;
         utcTime = (utcTime < 0) ? utcTime + 24 : utcTime;
         utcTime = (utcTime > 24) ? utcTime - 24 : utcTime;
-        
+
         // Get the GMT time
         int returnTime = (int) Math.floor(utcTime * 60 * 60 * 1000);
-        
+
         calendar.clear();
         calendar.setTimeZone(tz);
         calendar.add(Calendar.MILLISECOND, returnTime);
@@ -408,14 +408,14 @@ public class SunriseSunset {
     }
 
     public Date getOff(String off) {
-    	Date date = getOff(new Date (off));
+        Date date = getOff(new Date (off));
         Calendar calendar = Calendar.getInstance();
         calendar.clear();
         calendar.setTime(date);
 
         return calendar.getTime();
     }
-    
+
     public Date getOff(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.clear();
@@ -423,46 +423,46 @@ public class SunriseSunset {
 
         return calendar.getTime();
     }
-    
+
     /**
      * Simple main to test the class
-     * 
+     *
      * @param args
      */
     static public void main(String[] args) {
-        
+
         // output timezones
         for (String tzString : TimeZone.getAvailableIDs()) {
             if (tzString.startsWith("US") || tzString.startsWith("America")) {
                 System.out.println(tzString);
             }
         }
-        
-        
+
+
         // TODO Auto-generated method stub
         SunriseSunset calculator = new SunriseSunset();
-        
+
         List<Double> dataForYear = calculator.getSunlightForNorthern48LatitudeForYear(2011);
         for (int i=0; i<dataForYear.size(); i++) {
             System.out.println(dataForYear.get(i));
         }
-        
+
         double zenith = SunriseSunset.OFFICIAL_ZENITH;
-         
+
         DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
         dateFormat.setTimeZone(TimeZone.getTimeZone("US/Eastern"));
-        
+
         Calendar cal = Calendar.getInstance();
         cal.clear();
-        
+
         // Result should be "06/25/1970 05:25 EST"
         calculator.testDate(1990, Calendar.JUNE, 25, TimeZone.getTimeZone("US/Eastern"), 40.92528, -74.27694);
 
         calculator.testDate(2011, Calendar.MARCH, 19, TimeZone.getTimeZone("US/Mountain"), 40.058094, -105.195154);
         calculator.testDate(2011, Calendar.MARCH, 20, TimeZone.getTimeZone("US/Mountain"), 40.058094, -105.195154);
-        
+
         dateFormat.setTimeZone(TimeZone.getTimeZone("US/Mountain"));
-        
+
         System.out.println("Boulder");
         System.out.println("\tSunrise\t\t\tSunset\t\t\tDaylight");
         for (int j=0; j<12; j++) {
@@ -476,20 +476,20 @@ public class SunriseSunset {
             cal.set(Calendar.MILLISECOND, 0);
             double sunlight = calculator.getSunlightHours(40.058094, -105.195154, cal.getTime(), zenith, TimeZone.getTimeZone("US/Mountain"));
             int sunlightMinutes = (int) (60 * (sunlight - Math.floor(sunlight)));
-            System.out.println(i + "\t" + dateFormat.format(calculator.getSunrise(40.058094, -105.195154, cal.getTime(), zenith, TimeZone.getTimeZone("US/Mountain"))) + "\t" 
-                    + dateFormat.format(calculator.getSunset(40.058094, -105.195154, cal.getTime(), zenith, TimeZone.getTimeZone("US/Mountain"))) + "\t" 
+            System.out.println(i + "\t" + dateFormat.format(calculator.getSunrise(40.058094, -105.195154, cal.getTime(), zenith, TimeZone.getTimeZone("US/Mountain"))) + "\t"
+                    + dateFormat.format(calculator.getSunset(40.058094, -105.195154, cal.getTime(), zenith, TimeZone.getTimeZone("US/Mountain"))) + "\t"
                     + (int)(Math.floor(sunlight)) + ":" + sunlightMinutes);
         }
         }
-        
-        
+
+
         dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm");
         dateFormat.setTimeZone(TimeZone.getTimeZone("US/Central"));
         cal.clear();
         cal.set(2011, 2, 18);
         System.out.println("Sunrise " + dateFormat.format(cal.getTime()) + " in MN: " + dateFormat.format(calculator.getSunrise(49.384358, -95.153314, cal.getTime(), zenith, TimeZone.getTimeZone("US/Central"))));
         System.out.println("Sunset  " + dateFormat.format(cal.getTime()) + " in MN: " + dateFormat.format(calculator.getSunset(49.384358, -95.153314, cal.getTime(), zenith, TimeZone.getTimeZone("US/Central"))));
-        
+
     }
 
     private void testDate(int year, int month, int dayOfMonth, TimeZone tz, double latitude, double longitude) {
@@ -507,7 +507,7 @@ public class SunriseSunset {
         cal.set(Calendar.MONTH, month);
         cal.set(Calendar.YEAR, year);
         cal.setTimeZone(tz);
-        
+
         System.out.println(dateFormat.format(calculator.getSunrise(latitude, longitude, cal.getTime(), zenith, tz)) + " " + tz.getDisplayName());
         System.out.println(dateFormat.format(calculator.getSunset(latitude, longitude, cal.getTime(), zenith, tz)) + " " + tz.getDisplayName());
         System.out.println("");
