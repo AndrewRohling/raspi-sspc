@@ -33,5 +33,6 @@ public enum EventType
 {
     SunriseToday,
     SunsetToday,
+    OffToday,
     SunriseTomorrow
 }

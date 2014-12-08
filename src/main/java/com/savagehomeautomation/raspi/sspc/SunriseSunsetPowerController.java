@@ -52,14 +52,24 @@ public class SunriseSunsetPowerController
     // internal class members
     private Timer timer;
     private SunriseSunset ss; 
+    
     private Double latitude;
     private Double longitude;
+    private String off;
+    
     private EventType nextEvent;
+    
     private Date nextSunriseDate; 
     private Date nextSunsetDate;
+    private Date nextOffDate;
+    
     private GpioController gpio;
     private GpioPinDigitalOutput powerController;
     private GpioPinDigitalInput overrideSwitch;
+    
+    private static final String LONGITUDE_KEY = "-longitude=";
+    private static final String LATITUDE_KEY = "-latitude=";
+    private static final String OFF_KEY = "-off=";
     
     /**
      * Start the controller.
@@ -73,26 +83,26 @@ public class SunriseSunsetPowerController
         displayWelcome();
         
         // attempt to read command line arguments
-        for(String arg : args)
-        {
-            if(arg.startsWith("-longitude="))
-            {
-                try
-                {
-                    longitude = Double.parseDouble(arg.substring(11));
+        for (String arg : args) {
+            if (arg.startsWith(LONGITUDE_KEY)) {
+                try {
+                    longitude = Double.parseDouble(arg.substring(LONGITUDE_KEY.length()));
                     System.out.println("LONGITUDE = " + longitude);
                 }
-                catch(Exception ex){}
-            }
-            else if(arg.startsWith("-latitude="))
-            {
-                try
-                {
-                    latitude = Double.parseDouble(arg.substring(10));
+                catch (Exception ex) {}
+            } else if (arg.startsWith(LATITUDE_KEY)) {
+                try {
+                    latitude = Double.parseDouble(arg.substring(LATITUDE_KEY.length()));
                     System.out.println("LATITUDE  = " + latitude);
                 }
-                catch(Exception ex){}
-            }
+                catch (Exception ex) {}
+	        } else if (arg.startsWith(OFF_KEY)) {
+	            try {
+	            	off = arg.substring(OFF_KEY.length());
+	                System.out.println("off  = " + off);
+	            }
+	            catch(Exception ex){}
+	        }
         }
 
         // prompt user for latitude if needed
@@ -128,8 +138,7 @@ public class SunriseSunsetPowerController
         overrideSwitch.addListener(new OverrideSwitchListener());
         
         // schedule starting event; apply initial power controller state
-        switch(scheduleNextEvent())
-        {
+        switch(scheduleNextEvent()) {
             case SunriseToday:
             {
                 // if the next event is sunrise, then turn power ON
@@ -148,6 +157,12 @@ public class SunriseSunsetPowerController
                 powerController.high();
                 break;
             }
+            case OffToday:
+            {
+                // if the next event is sunset, then turn power OFF
+                powerController.low();
+                break;
+            }
         }
 
         // main program loop; 
@@ -155,8 +170,7 @@ public class SunriseSunsetPowerController
         for(;;)
         {
             String command = System.console().readLine();
-            if(command.equalsIgnoreCase("on"))
-            {
+            if (command.equalsIgnoreCase("on")) {
                 // turn ON power
                 powerController.high();
                 
@@ -164,101 +178,75 @@ public class SunriseSunsetPowerController
                 System.out.println("[OVERRIDE] POWER STATE ON");
                 System.out.println("---------------------------------");
 
-            }
-            else if(command.equalsIgnoreCase("off"))
-            {
+            } else if (command.equalsIgnoreCase("off")) {
                 // turn OFF power
                 powerController.low();
                 
                 System.out.println("---------------------------------");
                 System.out.println("[OVERRIDE] POWER STATE OFF");
                 System.out.println("---------------------------------");
-            }
-            else if(command.equalsIgnoreCase("status"))
-            {
-                // determine and display current power controller state
-                if(powerController.isHigh())
-                {
-                    System.out.println("---------------------------------");
+            } else if (command.equalsIgnoreCase("status")) {
+                System.out.println("---------------------------------");
+            	// determine and display current power controller state
+                if (powerController.isHigh()) {
                     System.out.println("[STATUS] POWER STATE IS : ON");
-                    System.out.println("---------------------------------");
-                }
-                else
-                {
-                    System.out.println("---------------------------------");
+                } else {
                     System.out.println("[STATUS] POWER STATE IS : OFF");
-                    System.out.println("---------------------------------");
                 }
-            }
-            else if(command.equalsIgnoreCase("time"))
-            {
+                System.out.println("---------------------------------");
+            } else if (command.equalsIgnoreCase("time")) {
                 // display current date/time
                 System.out.println("---------------------------------");
                 System.out.println("[CURRENT TIME] ");
                 System.out.println(new Date());
                 System.out.println("---------------------------------");
-            }
-            else if(command.equalsIgnoreCase("sunrise"))
-            {
+            } else if (command.equalsIgnoreCase("sunrise")) {
                 // display sunrise date/time
                 System.out.println("---------------------------------");
                 System.out.println("[NEXT SUNRISE] ");
                 System.out.println(" @ " + nextSunriseDate);
                 System.out.println("---------------------------------");
-            }
-            else if(command.equalsIgnoreCase("sunset"))
-            {
+            } else if (command.equalsIgnoreCase("sunset")) {
                 // display sunset date/time
                 System.out.println("---------------------------------");
                 System.out.println("[NEXT SUNSET] ");
                 System.out.println(" @ " + nextSunsetDate);
                 System.out.println("---------------------------------");
-            }
-            else if(command.equalsIgnoreCase("coord"))
-            {
+            } else if (command.equalsIgnoreCase("coord")) {
                 System.out.println("---------------------------------");
                 System.out.println("[LONGITUDE] = " + longitude);
                 System.out.println("[LATITUDE]  = " + latitude);
                 System.out.println("---------------------------------");
-            }
-            else if(command.equalsIgnoreCase("next"))
-            {
-                // display next scheduled event
-                switch(nextEvent)
-                {
-                    case SunriseToday:
-                    {
-                        System.out.println("-----------------------------------");
+            } else if(command.equalsIgnoreCase("next")) {
+	            System.out.println("-----------------------------------");
+            	// display next scheduled event
+                switch (nextEvent) {
+                    case SunriseToday: {
                         System.out.println("[NEXT EVENT] SUNRISE TODAY ");
                         System.out.println("  @ " + nextSunriseDate);
-                        System.out.println("-----------------------------------");
                         break;
                     }
-                    case SunsetToday:
-                    {
-                        System.out.println("-----------------------------------");
+                    case SunsetToday: {
                         System.out.println("[NEXT EVENT] SUNSET TODAY");
                         System.out.println("  @ " + nextSunsetDate);
-                        System.out.println("-----------------------------------");
                         break;
                     }
-                    case SunriseTomorrow:
-                    {
-                        System.out.println("-----------------------------------");
+                    case SunriseTomorrow: {
                         System.out.println("[NEXT EVENT] SUNRISE TOMORROW");
                         System.out.println("  @ " + nextSunriseDate);
-                        System.out.println("-----------------------------------");
                         break;
                     }
-                }                
-            }
-            else if(command.equalsIgnoreCase("help"))
-            {
+                    case OffToday: {
+                        System.out.println("[NEXT EVENT] OFF TODAY");
+                        System.out.println("  @ " + nextOffDate);
+                        break;
+                    }
+                }
+	            System.out.println("-----------------------------------");
+            } else if (command.equalsIgnoreCase("help")) {
                 // display user options menu
-                displayMenuOptions();                
-            }            
-            else 
-            {
+                displayMenuOptions();
+            } else {
                 // un-handled command
                 System.out.println("---------------------------------");
                 System.out.println("[INVALID COMMAND ENTRY]");
@@ -293,22 +281,20 @@ public class SunriseSunsetPowerController
     {
         boolean success = false;
         
-        while(!success)
-        try
-        {                    
-            // display user prompt
-            System.out.println("");
-            System.out.println("Please enter the longitude (in degrees) for your location:");
-            String longitudeString = System.console().readLine();
-            longitude = Double.parseDouble(longitudeString);
-            success = true;
-        }
-        catch(Exception ex)
-        {
-            System.err.println("***************************************************");
-            System.err.println("[ERROR] Invalid longitude entry.  Please try again.");
-            System.err.println("***************************************************");
-            success = false;
+        while (!success) {
+	        try {                    
+	            // display user prompt
+	            System.out.println("");
+	            System.out.println("Please enter the longitude (in degrees) for your location:");
+	            String longitudeString = System.console().readLine();
+	            longitude = Double.parseDouble(longitudeString);
+	            success = true;
+	        } catch (Exception ex) {
+	            System.err.println("***************************************************");
+	            System.err.println("[ERROR] Invalid longitude entry.  Please try again.");
+	            System.err.println("***************************************************");
+	            success = false;
+	        }
         }
     }    
 
@@ -320,22 +306,20 @@ public class SunriseSunsetPowerController
     {
         boolean success = false;
         
-        while(!success)
-        try
-        {        
-            // display user prompt
-            System.out.println("");
-            System.out.println("Please enter the latitude (in degrees) for your location:");
-            String latitudeString = System.console().readLine();
-            latitude = Double.parseDouble(latitudeString);
-            success = true;
-        }
-        catch(Exception ex)
-        {
-            System.err.println("***************************************************");
-            System.err.println("[ERROR] Invalid latitude entry.  Please try again.");
-            System.err.println("***************************************************");
-            success = false;
+        while (!success) {
+        	try {        
+	            // display user prompt
+	            System.out.println("");
+	            System.out.println("Please enter the latitude (in degrees) for your location:");
+	            String latitudeString = System.console().readLine();
+	            latitude = Double.parseDouble(latitudeString);
+	            success = true;
+	        } catch (Exception ex) {
+	            System.err.println("***************************************************");
+	            System.err.println("[ERROR] Invalid latitude entry.  Please try again.");
+	            System.err.println("***************************************************");
+	            success = false;
+	        }
         }
     }    
     
@@ -373,17 +357,18 @@ public class SunriseSunsetPowerController
         // get sunrise and sunset time for today
         Date today = new Date();
         Date today_sunrise = ss.getSunrise(latitude, longitude);
-        Date today_sunset = ss.getSunset(latitude, longitude);  
+        Date today_sunset = ss.getSunset(latitude, longitude);
+        Date today_off = ss.getOff(off);
 
         // get sunrise and sunset time for tomorrow
         Calendar tomorrow = Calendar.getInstance();
         tomorrow.roll(Calendar.DATE, true);
         Date tomorrow_sunrise = ss.getSunrise(latitude, longitude, tomorrow.getTime());
         Date tomorrow_sunset = ss.getSunset(latitude, longitude, tomorrow.getTime());
+        Date tomorrow_off = ss.getOff(off);
 
         // determine if sunrise or sunset is the next event
-        if(today.after(today_sunset))
-        {
+        if (today.after(today_sunset)) {
             // get tomorrow's date time
             System.out.println("-----------------------------------");
             System.out.println("[SCHEDULED] NEXT EVENT: SUNRISE    ");
@@ -400,9 +385,7 @@ public class SunriseSunsetPowerController
             // return next event
             nextEvent = EventType.SunriseTomorrow;
             return nextEvent;
-        }
-        else if(today.after(today_sunrise))
-        {
+        } else if (today.after(today_sunrise)) {
             System.out.println("-----------------------------------");
             System.out.println("[SCHEDULED] NEXT EVENT: SUNSET     ");
             System.out.println("  @ " + today_sunset);
@@ -418,9 +401,23 @@ public class SunriseSunsetPowerController
             // return next event
             nextEvent = EventType.SunsetToday;
             return nextEvent;            
-        }
-        else
-        {
+        } else if (today.after(today_off)) {
+            System.out.println("-----------------------------------");
+            System.out.println("[SCHEDULED] NEXT EVENT: OFF     ");
+            System.out.println("  @ " + today_off);
+            System.out.println("-----------------------------------");
+            
+            // schedule sunset as next event
+            timer.schedule(new SunsetTask(), today_off);
+
+            // set cache next sunrise and sunset variables
+            nextSunriseDate = tomorrow_sunrise;
+            nextSunsetDate = today_sunset;
+            
+            // return next event
+            nextEvent = EventType.SunriseTomorrow;
+            return nextEvent;            
+        } else {
             System.out.println("-----------------------------------");
             System.out.println("[SCHEDULED] NEXT EVENT: SUNRISE    ");
             System.out.println("  @ " + today_sunrise);

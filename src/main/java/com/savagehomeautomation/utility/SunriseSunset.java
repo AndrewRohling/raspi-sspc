@@ -406,6 +406,23 @@ public class SunriseSunset {
 
         return calendar.getTime();
     }
+
+    public Date getOff(String off) {
+    	Date date = getOff(new Date (off));
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.setTime(date);
+
+        return calendar.getTime();
+    }
+    
+    public Date getOff(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.clear();
+        calendar.setTime(date);
+
+        return calendar.getTime();
+    }
     
     /**
      * Simple main to test the class
